@@ -1,9 +1,11 @@
 package com.example.yeqinglu.databasetest;
 
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -84,6 +86,69 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Button querButton = (Button)findViewById(R.id.query_data);
+        querButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SQLiteDatabase db = dbHelper.getWritableDatabase();
+                    // 查询Book表中所有的数据
+                    Cursor cursor = db.query("Book", null, null, null, null, null, null);
+                    if (cursor.moveToFirst())
+                    cursor.close();{
+                    do {
+                        // 遍历Cursor对象，取出数据并打印
+                        String name = cursor.getString(cursor.
+                                getColumnIndex("name"));
+                        String author = cursor.getString(cursor.
+                                getColumnIndex("author"));
+                        int pages = cursor.getInt(cursor.getColumnIndex
+                                ("pages"));
+                        double price = cursor.getDouble(cursor.
+                                getColumnIndex("price"));
+                        Log.d("MainActivity", "book name is " + name);
+                        Log.d("MainActivity", "book author is " + author);
+                        Log.d("MainActivity", "book pages is " + pages);
+                        Log.d("MainActivity", "book price is " + price);
+                    } while (cursor.moveToNext());
+                }
+                }
+
+        });
+
+        Button  replaceData = (Button)findViewById(R.id.replace_data);
+        replaceData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                /*首先调用 SQLiteDatabase的 beginTransaction()
+                方法来开启一个事务，然后在一个异常捕获的代码块中去执行具体的数据库操作，当所有的
+                操作都完成之后，调用 setTransactionSuccessful()表示事务已经执行成功了，最后在 finally
+                代码块中调用 endTransaction()来结束事务。注意观察，我们在删除旧数据的操作完成后手动
+                抛出了一个 NullPointerException，这样添加新数据的代码就执行不到了。不过由于事务的存
+                在，中途出现异常会导致事务的失败，此时旧数据应该是删除不掉的。*/
+
+                SQLiteDatabase db = dbHelper.getWritableDatabase();
+                db.beginTransaction(); // 开启事务
+                try {
+                    db.delete("Book", null, null);
+                    if (true) {
+// 在这里手动抛出一个异常，让事务失败
+                        throw new NullPointerException();
+                    }
+                    ContentValues values = new ContentValues();
+                    values.put("name", "Game of Thrones");
+                    values.put("author", "George Martin");
+                    values.put("pages", 720);
+                    values.put("price", 20.85);
+                    db.insert("Book", null, values);
+                    db.setTransactionSuccessful(); // 事务已经执行成功
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    db.endTransaction(); // 结束事务
+                }
+            }
+        });
 
 
     }
